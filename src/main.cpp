@@ -50,6 +50,7 @@ void setup() {
     pinMode(BIN1, OUTPUT);
     pinMode(BIN2, OUTPUT);
 
+    WiFi.softAP(ssid, password);
     /*Serial.println("\nUruchamianie AP...");
     if(WiFi.softAP(ssid, password)) {
         Serial.print("IP: ");
