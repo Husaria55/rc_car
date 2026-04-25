@@ -19,19 +19,19 @@ ControllerPtr myController;
 void onConnectedController(ControllerPtr ctl) {
   if (myController == nullptr) {
     myController = ctl;
-    Serial.println("Polaczono pada!");
+    //Serial.println("Polaczono pada!");
   }
 }
 
 void onDisconnectedController(ControllerPtr ctl) {
   if (myController == ctl) {
     myController = nullptr;
-    Serial.println("Rozlaczono pada!");
+    //Serial.println("Rozlaczono pada!");
   }
 }
 
 void setMotorA(int speed) {
-  Serial.printf("Motor A speed: %d\t", speed);
+  //Serial.printf("Motor A speed: %d\t", speed);
   if (speed > 0) {
     digitalWrite(AIN1, HIGH);
     digitalWrite(AIN2, LOW);
@@ -48,7 +48,7 @@ void setMotorA(int speed) {
 }
 
 void setMotorB(int speed) {
-  Serial.printf("Motor B speed: %d\n", speed);
+  //Serial.printf("Motor B speed: %d\n", speed);
   if (speed > 0) {
     digitalWrite(BIN1, HIGH);
     digitalWrite(BIN2, LOW);
@@ -86,7 +86,7 @@ void setup() {
   BP32.setup(&onConnectedController, &onDisconnectedController);
   //BP32.forgetBluetoothKeys();
   
-  Serial.println("Gotowy! Na wyłączonym padzie wcisnij i trzymaj SHARE + DOMEK az zacznie szybko migac...");
+  //Serial.println("Gotowy! Na wyłączonym padzie wcisnij i trzymaj SHARE + DOMEK az zacznie szybko migac...");
 }
 
 void loop() {
