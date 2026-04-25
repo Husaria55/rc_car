@@ -1,25 +1,153 @@
 #include <Arduino.h>
-#include "BluetoothSerial.h"
+#include <Bluepad32.h>
 
-BluetoothSerial SerialBT;
+const int PWMA = 25;
+const int AIN1 = 26;
+const int AIN2 = 27;
+
+const int PWMB = 14;
+const int BIN1 = 12;
+const int BIN2 = 13;
+
+const int freq = 5000;
+const int pwmChannelA = 0;
+const int pwmChannelB = 1;
+const int ledc_resolution = 8;
+
+ControllerPtr myControllers[BP32_MAX_GAMEPADS];
+
+void onConnectedController(ControllerPtr ctl) {
+  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    if (myControllers[i] == nullptr) {
+      myControllers[i] = ctl;
+      Serial.println("Polaczono pada!");
+      break;
+    }
+  }
+}
+
+void onDisconnectedController(ControllerPtr ctl) {
+  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    if (myControllers[i] == ctl) {
+      myControllers[i] = nullptr;
+      Serial.println("Rozlaczono pada!");
+      break;
+    }
+  }
+}
+
+void setMotorA(int speed) {
+  if (speed > 0) {
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    ledcWrite(pwmChannelA, speed);
+  } else if (speed < 0) {
+    digitalWrite(AIN1, LOW);
+    digitalWrite(AIN2, HIGH);
+    ledcWrite(pwmChannelA, abs(speed));
+  } else {
+    digitalWrite(AIN1, LOW);
+    digitalWrite(AIN2, LOW);
+    ledcWrite(pwmChannelA, 0);
+  }
+}
+
+void setMotorB(int speed) {
+  if (speed > 0) {
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    ledcWrite(pwmChannelB, speed);
+  } else if (speed < 0) {
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, HIGH);
+    ledcWrite(pwmChannelB, abs(speed));
+  } else {
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, LOW);
+    ledcWrite(pwmChannelB, 0);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial);
-  delay(1000);
+  while(!Serial); 
+  delay(2000);
 
-  // Odpalamy Bluetooth pod wybraną nazwą
-  SerialBT.begin("ESP32_TEST_BT"); 
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+
+  ledcSetup(pwmChannelA, freq, ledc_resolution);
+  ledcAttachPin(PWMA, pwmChannelA);
+
+  ledcSetup(pwmChannelB, freq, ledc_resolution);
+  ledcAttachPin(PWMB, pwmChannelB);
+
+  setMotorA(0);
+  setMotorB(0);
+
+  BP32.setup(&onConnectedController, &onDisconnectedController);
+  BP32.forgetBluetoothKeys();
   
-  Serial.println("\n--- TEST BLUETOOTH ---");
-  Serial.println("Modul Bluetooth uruchomiony!");
-  Serial.println("Wejdz w ustawienia komputera i poszukaj urządzenia: ESP32_TEST_BT");
+  Serial.println("Gotowy! Na wyłączonym padzie wcisnij i trzymaj SHARE + DOMEK az zacznie szybko migac...");
 }
 
 void loop() {
-  // Pusta pętla - ESP32 po prostu nadaje sygnał
-  delay(1000);
+  BP32.update();
+
+  bool hasController = false;
+  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    if (myControllers[i] != nullptr && myControllers[i]->isConnected()) {
+      hasController = true;
+      
+      int leftY = myControllers[i]->axisY();
+      int rightY = myControllers[i]->axisRY();
+
+      if (abs(leftY) < 40) leftY = 0;
+      if (abs(rightY) < 40) rightY = 0;
+
+      int speedA = map(leftY, 512, -511, -255, 255);
+      int speedB = map(rightY, 512, -511, -255, 255);
+
+      setMotorA(speedA);
+      setMotorB(speedB);
+      break; 
+    }
+  }
+
+  if (!hasController) {
+    setMotorA(0);
+    setMotorB(0);
+  }
+  
+  delay(20);
 }
+
+
+//TEST BLUETOOTH:
+// #include <Arduino.h>
+// #include "BluetoothSerial.h"
+
+// BluetoothSerial SerialBT;
+
+// void setup() {
+//   Serial.begin(115200);
+//   while(!Serial);
+//   delay(1000);
+
+//   // Odpalamy Bluetooth pod wybraną nazwą
+//   SerialBT.begin("ESP32_TEST_BT"); 
+  
+//   Serial.println("\n--- TEST BLUETOOTH ---");
+//   Serial.println("Modul Bluetooth uruchomiony!");
+//   Serial.println("Wejdz w ustawienia komputera i poszukaj urządzenia: ESP32_TEST_BT");
+// }
+
+// void loop() {
+//   // Pusta pętla - ESP32 po prostu nadaje sygnał
+//   delay(1000);
+// }
 
 
 // #include <Arduino.h>
