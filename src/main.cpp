@@ -1,121 +1,122 @@
 #include <Arduino.h>
-#include <PS4Controller.h>
+#include "BluetoothSerial.h"
 
-// --- KONFIGURACJA PINÓW ---
-
-// Piny dla Silnika A (Lewy)
-const int PWMA = 25;
-const int AIN1 = 26;
-const int AIN2 = 27;
-
-// Piny dla Silnika B (Prawy)
-const int PWMB = 14;
-const int BIN1 = 12;
-const int BIN2 = 13;
-
-// Ustawienia PWM
-const int freq = 5000;
-const int pwmChannelA = 0;
-const int pwmChannelB = 1;
-const int ledc_resolution = 8; // Wartości od 0 do 255
-
-// --- FUNKCJE STERUJĄCE SILNIKAMI ---
-
-// Funkcja sterująca lewym silnikiem (prędkość od -255 do 255)
-void setMotorA(int speed) {
-  if (speed > 0) { // Do przodu
-    digitalWrite(AIN1, HIGH);
-    digitalWrite(AIN2, LOW);
-    ledcWrite(pwmChannelA, speed);
-  } else if (speed < 0) { // Do tyłu
-    digitalWrite(AIN1, LOW);
-    digitalWrite(AIN2, HIGH);
-    ledcWrite(pwmChannelA, abs(speed));
-  } else { // Stop
-    digitalWrite(AIN1, LOW);
-    digitalWrite(AIN2, LOW);
-    ledcWrite(pwmChannelA, 0);
-  }
-}
-
-// Funkcja sterująca prawym silnikiem (prędkość od -255 do 255)
-void setMotorB(int speed) {
-  if (speed > 0) { // Do przodu
-    digitalWrite(BIN1, HIGH);
-    digitalWrite(BIN2, LOW);
-    ledcWrite(pwmChannelB, speed);
-  } else if (speed < 0) { // Do tyłu
-    digitalWrite(BIN1, LOW);
-    digitalWrite(BIN2, HIGH);
-    ledcWrite(pwmChannelB, abs(speed));
-  } else { // Stop
-    digitalWrite(BIN1, LOW);
-    digitalWrite(BIN2, LOW);
-    ledcWrite(pwmChannelB, 0);
-  }
-}
+BluetoothSerial SerialBT;
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial); 
-  delay(2000);
+  while(!Serial);
+  delay(1000);
 
-  // --- KONFIGURACJA PINÓW I PWM ---
-  pinMode(AIN1, OUTPUT);
-  pinMode(AIN2, OUTPUT);
-  pinMode(BIN1, OUTPUT);
-  pinMode(BIN2, OUTPUT);
-
-  // Konfiguracja kanałów PWM dla silników
-  ledcSetup(pwmChannelA, freq, ledc_resolution);
-  ledcAttachPin(PWMA, pwmChannelA);
-
-  ledcSetup(pwmChannelB, freq, ledc_resolution);
-  ledcAttachPin(PWMB, pwmChannelB);
-
-  // Zatrzymanie silników na starcie
-  setMotorA(0);
-  setMotorB(0);
-
-  // --- START BLUETOOTH ---
-  // TUTAJ WPISZ ADRES MAC ESP32 (TEN SAM, KTÓRY WPISAŁEŚ DO PADA!)
-  PS4.begin("3C:8A:1F:09:7E:36"); // Zamień na swój MAC!
+  // Odpalamy Bluetooth pod wybraną nazwą
+  SerialBT.begin("ESP32_TEST_BT"); 
   
-  Serial.println("Gotowy! Wcisnij przycisk PS na padzie, aby polaczyc...");
+  Serial.println("\n--- TEST BLUETOOTH ---");
+  Serial.println("Modul Bluetooth uruchomiony!");
+  Serial.println("Wejdz w ustawienia komputera i poszukaj urządzenia: ESP32_TEST_BT");
 }
 
 void loop() {
-  // Sprawdzamy, czy pad jest połączony
-  if (PS4.isConnected()) {
-    
-    // Odczyt gałek - pad PS4 zwraca wartości od -128 (dół) do 127 (góra)
-    int leftY = PS4.LStickY();  
-    int rightY = PS4.RStickY(); 
-
-    // Deadzone (martwa strefa) - stare pady potrafią "pływać" i nie wracają idealnie do zera.
-    // Dzięki temu silniki nie będą cicho buczeć, gdy puścicie gałki.
-    if (abs(leftY) < 15) leftY = 0;
-    if (abs(rightY) < 15) rightY = 0;
-
-    // Mapujemy zakres odczytu z pada (-128 do 127) na zakres mocy PWM (-255 do 255)
-    int speedA = map(leftY, -128, 127, -255, 255);
-    int speedB = map(rightY, -128, 127, -255, 255);
-
-    // Wysyłamy moc na silniki
-    setMotorA(speedA);
-    setMotorB(speedB);
-    
-    // Opcjonalny podgląd w Serial Monitorze
-    // Serial.printf("Moc L: %d | Moc R: %d\n", speedA, speedB);
-  } else {
-    // Jeśli pad zgubi zasięg lub się rozłączy – dla bezpieczeństwa zatrzymujemy silniki!
-    setMotorA(0);
-    setMotorB(0);
-  }
-  
-  // Mały delay, żeby nie zasypać procesora
-  delay(20);
+  // Pusta pętla - ESP32 po prostu nadaje sygnał
+  delay(1000);
 }
+
+
+// #include <Arduino.h>
+// #include <PS4Controller.h>
+
+// const int PWMA = 25;
+// const int AIN1 = 26;
+// const int AIN2 = 27;
+
+// const int PWMB = 14;
+// const int BIN1 = 12;
+// const int BIN2 = 13;
+
+// const int freq = 5000;
+// const int pwmChannelA = 0;
+// const int pwmChannelB = 1;
+// const int ledc_resolution = 8;
+
+// void setMotorA(int speed) {
+//   if (speed > 0) {
+//     digitalWrite(AIN1, HIGH);
+//     digitalWrite(AIN2, LOW);
+//     ledcWrite(pwmChannelA, speed);
+//   } else if (speed < 0) {
+//     digitalWrite(AIN1, LOW);
+//     digitalWrite(AIN2, HIGH);
+//     ledcWrite(pwmChannelA, abs(speed));
+//   } else {
+//     digitalWrite(AIN1, LOW);
+//     digitalWrite(AIN2, LOW);
+//     ledcWrite(pwmChannelA, 0);
+//   }
+// }
+
+// void setMotorB(int speed) {
+//   if (speed > 0) {
+//     digitalWrite(BIN1, HIGH);
+//     digitalWrite(BIN2, LOW);
+//     ledcWrite(pwmChannelB, speed);
+//   } else if (speed < 0) {
+//     digitalWrite(BIN1, LOW);
+//     digitalWrite(BIN2, HIGH);
+//     ledcWrite(pwmChannelB, abs(speed));
+//   } else {
+//     digitalWrite(BIN1, LOW);
+//     digitalWrite(BIN2, LOW);
+//     ledcWrite(pwmChannelB, 0);
+//   }
+// }
+
+// void setup() {
+//   Serial.begin(115200);
+//   while(!Serial); 
+//   delay(2000);
+
+//   pinMode(AIN1, OUTPUT);
+//   pinMode(AIN2, OUTPUT);
+//   pinMode(BIN1, OUTPUT);
+//   pinMode(BIN2, OUTPUT);
+
+//   ledcSetup(pwmChannelA, freq, ledc_resolution);
+//   ledcAttachPin(PWMA, pwmChannelA);
+
+//   ledcSetup(pwmChannelB, freq, ledc_resolution);
+//   ledcAttachPin(PWMB, pwmChannelB);
+
+//   setMotorA(0);
+//   setMotorB(0);
+
+//   PS4.begin("3C:8A:1F:09:7E:36"); 
+  
+//   Serial.println("Gotowy! Wcisnij przycisk PS na padzie, aby polaczyc...");
+// }
+
+// void loop() {
+//   if (PS4.isConnected()) {
+//     Serial.println("polaczone!");
+//     Serial.println();
+
+//     int leftY = PS4.LStickY();  
+//     int rightY = PS4.RStickY(); 
+
+//     if (abs(leftY) < 15) leftY = 0;
+//     if (abs(rightY) < 15) rightY = 0;
+
+//     int speedA = map(leftY, -128, 127, -255, 255);
+//     int speedB = map(rightY, -128, 127, -255, 255);
+
+//     setMotorA(speedA);
+//     setMotorB(speedB);
+//   } else {
+//     setMotorA(0);
+//     setMotorB(0);
+//   }
+  
+//   delay(20);
+// }
 
 
 // #include <Arduino.h>
