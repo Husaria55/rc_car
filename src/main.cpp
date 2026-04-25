@@ -20,6 +20,12 @@ unsigned long lastPacketTime = 0;
 const unsigned long timeoutMs = 500;
 
 void setMotor(int speed, int pin1, int pin2) {
+    /*if(pin1 == AIN1) {
+      Serial.printf("Motor A: %d\t", speed);
+    }
+    else {
+      Serial.printf("Motor B: %d\n", speed);
+    }*/
     speed = constrain(speed, -255, 255);
     if (speed > 0) {
         analogWrite(pin1, speed);
@@ -35,19 +41,22 @@ void setMotor(int speed, int pin1, int pin2) {
 
 void setup() {
     Serial.begin(115200);
+
+    while(!Serial);
+    delay(2000);
     
     pinMode(AIN1, OUTPUT);
     pinMode(AIN2, OUTPUT);
     pinMode(BIN1, OUTPUT);
     pinMode(BIN2, OUTPUT);
 
-    Serial.println("\nUruchamianie AP...");
+    /*Serial.println("\nUruchamianie AP...");
     if(WiFi.softAP(ssid, password)) {
         Serial.print("IP: ");
         Serial.println(WiFi.softAPIP());
     } else {
         Serial.println("Błąd AP!");
-    }
+    }*/
 
     udp.begin(localUdpPort);
 }
