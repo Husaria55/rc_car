@@ -42,8 +42,8 @@ void setMotor(int speed, int pin1, int pin2) {
 void setup() {
     Serial.begin(115200);
 
-    while(!Serial);
-    delay(2000);
+    /*while(!Serial);
+    delay(2000);*/
     
     pinMode(AIN1, OUTPUT);
     pinMode(AIN2, OUTPUT);
@@ -72,8 +72,8 @@ void loop() {
 
             int sA = 0, sB = 0;
             if (sscanf(incomingPacket, "%d,%d", &sA, &sB) == 2) {
-                setMotor(sA, AIN1, AIN2);
-                setMotor(sB, BIN1, BIN2);
+                setMotor(-sA, AIN1, AIN2);
+                setMotor(-sB, BIN1, BIN2);
             }
         }
     }
