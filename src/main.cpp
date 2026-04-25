@@ -14,25 +14,19 @@ const int pwmChannelA = 0;
 const int pwmChannelB = 1;
 const int ledc_resolution = 8;
 
-ControllerPtr myControllers[BP32_MAX_GAMEPADS];
+ControllerPtr myController;
 
 void onConnectedController(ControllerPtr ctl) {
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == nullptr) {
-      myControllers[i] = ctl;
-      Serial.println("Polaczono pada!");
-      break;
-    }
+  if (myController == nullptr) {
+    myController = ctl;
+    Serial.println("Polaczono pada!");
   }
 }
 
 void onDisconnectedController(ControllerPtr ctl) {
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == ctl) {
-      myControllers[i] = nullptr;
-      Serial.println("Rozlaczono pada!");
-      break;
-    }
+  if (myController == ctl) {
+    myController = nullptr;
+    Serial.println("Rozlaczono pada!");
   }
 }
 
@@ -97,23 +91,21 @@ void loop() {
   BP32.update();
 
   bool hasController = false;
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] != nullptr && myControllers[i]->isConnected()) {
-      hasController = true;
-      
-      int leftY = myControllers[i]->axisY();
-      int rightY = myControllers[i]->axisRY();
-
-      if (abs(leftY) < 40) leftY = 0;
-      if (abs(rightY) < 40) rightY = 0;
-
-      int speedA = map(leftY, 512, -511, -255, 255);
-      int speedB = map(rightY, 512, -511, -255, 255);
-
-      setMotorA(speedA);
-      setMotorB(speedB);
-      break; 
-    }
+  if (myController != nullptr && myController->isConnected()) {
+    hasController = true;
+    
+    int leftY = myController->axisY();
+    int rightY = myController->axisRY();
+    if (abs(leftY) < 40)
+      leftY = 0;
+    if (abs(rightY) < 40)
+      rightY = 0;
+    int speedA = map(leftY, 512, -511, -255, 255);
+    int speedB = map(rightY, 512, -511, -255, 255);
+    //Serial.println(speedA); debug
+    //Serial.println(speedB); debug
+    setMotorA(speedA);
+    setMotorB(speedB);
   }
 
   if (!hasController) {
