@@ -31,6 +31,7 @@ void onDisconnectedController(ControllerPtr ctl) {
 }
 
 void setMotorA(int speed) {
+  Serial.printf("Motor A speed: %d\t", speed);
   if (speed > 0) {
     digitalWrite(AIN1, HIGH);
     digitalWrite(AIN2, LOW);
@@ -47,6 +48,7 @@ void setMotorA(int speed) {
 }
 
 void setMotorB(int speed) {
+  Serial.printf("Motor B speed: %d\n", speed);
   if (speed > 0) {
     digitalWrite(BIN1, HIGH);
     digitalWrite(BIN2, LOW);
@@ -82,7 +84,7 @@ void setup() {
   setMotorB(0);
 
   BP32.setup(&onConnectedController, &onDisconnectedController);
-  BP32.forgetBluetoothKeys();
+  //BP32.forgetBluetoothKeys();
   
   Serial.println("Gotowy! Na wyłączonym padzie wcisnij i trzymaj SHARE + DOMEK az zacznie szybko migac...");
 }
@@ -94,18 +96,25 @@ void loop() {
   if (myController != nullptr && myController->isConnected()) {
     hasController = true;
     
-    int leftY = myController->axisY();
-    int rightY = myController->axisRY();
-    if (abs(leftY) < 40)
-      leftY = 0;
-    if (abs(rightY) < 40)
-      rightY = 0;
-    int speedA = map(leftY, 512, -511, -255, 255);
-    int speedB = map(rightY, 512, -511, -255, 255);
-    //Serial.println(speedA); debug
-    //Serial.println(speedB); debug
-    setMotorA(speedA);
-    setMotorB(speedB);
+    if(myController->a()) {
+      setMotorA(0);
+      setMotorB(0);
+    }
+
+    else {
+      int leftY = myController->axisY();
+      int rightY = myController->axisRY();
+      if (abs(leftY) < 40)
+        leftY = 0;
+      if (abs(rightY) < 40)
+        rightY = 0;
+      int speedA = map(leftY, 512, -511, -255, 255);
+      int speedB = map(rightY, 512, -511, -255, 255);
+      //Serial.println(speedA); debug
+      //Serial.println(speedB); debug
+      setMotorA(speedA);
+      setMotorB(speedB);
+    }
   }
 
   if (!hasController) {
